@@ -25,7 +25,6 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	}
 	else {
 		return_penetration_depth = 0.0f;
-		return_penetration_vector = NULL;
 		return false;
 	}
 }
