@@ -91,6 +91,7 @@ static void getClosestEdge(std::vector<Util::Vector>& simplex, float& minDist,
 
 		Util::Vector b_minus_a = *fit - *git;
 		Util::Vector a = *git;
+		//Util::Vector n = normalize(cross(cross(b_minus_a, a), b_minus_a));
 		Util::Vector n = Util::normalize(a * (Util::dot(b_minus_a, b_minus_a)) - b_minus_a * (Util::dot(b_minus_a, a)));
 		if (Util::dot(n, a) < minDist) {
 			minDist = Util::dot(n, a);
@@ -102,7 +103,7 @@ static void getClosestEdge(std::vector<Util::Vector>& simplex, float& minDist,
 
 //implementation of GJK algorithm, return true and simplex is not null or false and simplex is nulls
 static bool GJK(std::vector<Util::Vector>& simplex, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB) {
-	Util::Vector direction(-1, 0, 1);
+	Util::Vector direction(-1, 0, -1);
 	Util::Vector s = simplexMinkowski(_shapeA, _shapeB, -direction);
 	simplex.push_back(s);
 	for (;;) {
