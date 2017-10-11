@@ -74,10 +74,37 @@ static bool containsOrigin(std::vector<Util::Vector>& simplex, Util::Vector& dir
 	}
 }
 
+static void getClosestEdge(std::vector<Util::Vector>& simplex, float& minDist,
+	std::vector<Util::Vector>::iterator& it, Util::Vector& norm) {
+	//TODO refactor for clarity and test
+	minDist = FLT_MAX;
+	std::vector<Util::Vector>::iterator fit;
+	//iterates through each point of the simplex and finds distance from origin to each edge, keeping track of cloest one so far
+	for (std::vector<Util::Vector>::iterator git = simplex.begin(); git != simplex.end(); git++) {
+		//if last point, go full circle
+		if (git + 1 == simplex.end()) {
+			fit = simplex.begin();
+		}
+		else {
+			fit = git + 1;
+		}
+
+		Util::Vector b_minus_a = *fit - *git;
+		Util::Vector a = *git;
+		Util::Vector n = Util::normalize(a * (Util::dot(b_minus_a, b_minus_a)) - b_minus_a * (Util::dot(b_minus_a, a)));
+		if (Util::dot(n, a) < minDist) {
+			minDist = Util::dot(n, a);
+			it = fit;
+			norm = n;
+		}
+	}
+}
+
 //implementation of GJK algorithm, return true and simplex is not null or false and simplex is nulls
 static bool GJK(std::vector<Util::Vector>& simplex, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB) {
 	Util::Vector direction(-1, 0, 1);
 	Util::Vector s = simplexMinkowski(_shapeA, _shapeB, -direction);
+	simplex.push_back(s);
 	for (;;) {
 		Util::Vector w = simplexMinkowski(_shapeA, _shapeB, direction);
 		simplex.push_back(w);
@@ -99,6 +126,24 @@ static bool GJK(std::vector<Util::Vector>& simplex, const std::vector<Util::Vect
 //implementation of EPA algorithm, it is given that GJK has concluded that the shapes are intersecting
 static void EPA(float& return_penetration_depth, Util::Vector& return_penetration_vector, std::vector<Util::Vector>& simplex,
 	const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB) {
+	float m;
+	std::vector<Util::Vector>::iterator it;
+	Util::Vector n;
+
+	//should be guranteed to converge
+	for (;;) {
+		getClosestEdge(simplex, m, it, n);
+		Util::Vector p = simplexMinkowski(_shapeA, _shapeB, n);
+		float dotp = Util::dot(p, n);
+		if (dotp - m <= 0) {
+			return_penetration_vector = n;
+			return_penetration_depth = dotp;
+			return;
+		}
+		else {
+			simplex.insert(it, p);
+		}
+	}
 
 }
 //Look at the GJK_EPA.h header file for documentation and instructions
