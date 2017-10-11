@@ -91,8 +91,8 @@ static void getClosestEdge(std::vector<Util::Vector>& simplex, float& minDist,
 
 		Util::Vector b_minus_a = *fit - *git;
 		Util::Vector a = *git;
-		Util::Vector n = normalize(cross(cross(b_minus_a, a), b_minus_a));
-		//Util::Vector n = Util::normalize(a * (Util::dot(b_minus_a, b_minus_a)) - b_minus_a * (Util::dot(b_minus_a, a)));
+		Util::Vector n = Util::normalize(a * (Util::dot(b_minus_a, b_minus_a)) - b_minus_a * (Util::dot(b_minus_a, a)));
+
 		if (Util::dot(n, a) <= minDist) {
 			minDist = Util::dot(n, a);
 			it = fit;
