@@ -10,7 +10,7 @@ SteerLib::GJK_EPA::GJK_EPA()
 //finds s_{pt}(direction)
 static Util::Vector simplex(Util::Vector& direction, const std::vector<Util::Vector>& _shape) {
 	Util::Vector output(0,0,0);
-	float max = FLT_MIN;
+	float max = -FLT_MAX;
 	for (std::vector<Util::Vector>::const_iterator it = _shape.begin(); it != _shape.end(); it++) {
 		float dotp = Util::dot(*it, direction);
 		if (max < dotp) {
@@ -32,7 +32,7 @@ static Util::Vector simplexMinkowski(const std::vector<Util::Vector>& _shapeA, c
 //function retur
 static bool containsOrigin(std::vector<Util::Vector>& simplex, Util::Vector& direction) {
 	Util::Vector a, b, c;
-	if (simplex.size() < 3) {
+	if (simplex.size() != 3) {
 		a = simplex.back();
 		b = simplex.front();
 
@@ -57,7 +57,7 @@ static bool containsOrigin(std::vector<Util::Vector>& simplex, Util::Vector& dir
 		//set direction to norm of b - a
 		direction = Util::Vector(-1 * b_minus_a.z, 0, b_minus_a.x);
 		direction = Util::dot(direction, c) > 0 ? (-1) * direction : direction;
-		if (Util::dot(direction, a) <= 0) {
+		if (Util::dot(direction, -a) > 0) {
 			//this implies that d's angle with a and c are both more than 90, which means the origin is outside of both lines
 			simplex.erase(simplex.begin());
 			return false;
@@ -66,7 +66,7 @@ static bool containsOrigin(std::vector<Util::Vector>& simplex, Util::Vector& dir
 		Util::Vector c_minus_a = c - a;
 		direction = Util::Vector(-1 * c_minus_a.z, 0, c_minus_a.x);
 		direction = Util::dot(direction, b) > 0 ? (-1) * direction : direction;
-		if (Util::dot(direction, a) <= 0) {
+		if (Util::dot(direction, -a) > 0) {
 			simplex.erase(simplex.begin() + 1);
 			return false;
 		}
@@ -91,9 +91,9 @@ static void getClosestEdge(std::vector<Util::Vector>& simplex, float& minDist,
 
 		Util::Vector b_minus_a = *fit - *git;
 		Util::Vector a = *git;
-		//Util::Vector n = normalize(cross(cross(b_minus_a, a), b_minus_a));
-		Util::Vector n = Util::normalize(a * (Util::dot(b_minus_a, b_minus_a)) - b_minus_a * (Util::dot(b_minus_a, a)));
-		if (Util::dot(n, a) < minDist) {
+		Util::Vector n = normalize(cross(cross(b_minus_a, a), b_minus_a));
+		//Util::Vector n = Util::normalize(a * (Util::dot(b_minus_a, b_minus_a)) - b_minus_a * (Util::dot(b_minus_a, a)));
+		if (Util::dot(n, a) <= minDist) {
 			minDist = Util::dot(n, a);
 			it = fit;
 			norm = n;
@@ -103,7 +103,7 @@ static void getClosestEdge(std::vector<Util::Vector>& simplex, float& minDist,
 
 //implementation of GJK algorithm, return true and simplex is not null or false and simplex is nulls
 static bool GJK(std::vector<Util::Vector>& simplex, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB) {
-	Util::Vector direction(-1, 0, -1);
+	Util::Vector direction(-1, 0, 1);
 	Util::Vector s = simplexMinkowski(_shapeA, _shapeB, -direction);
 	simplex.push_back(s);
 	for (;;) {
